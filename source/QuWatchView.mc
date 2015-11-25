@@ -27,6 +27,12 @@ class QuWatchView extends Ui.WatchFace {
         var timeFormat = "$1$:$2$";
         var clockTime = Sys.getClockTime();
         var hours = clockTime.hour;
+        var width, height;
+        var hour, min;
+        
+        width = dc.getWidth();
+        height = dc.getHeight();        
+        
         if (!Sys.getDeviceSettings().is24Hour) {
             if (hours > 12) {
                 hours = hours - 12;
@@ -46,6 +52,28 @@ class QuWatchView extends Ui.WatchFace {
 
         // Call the parent onUpdate function to redraw the layout
         View.onUpdate(dc);
+        
+        // Analog hands
+		dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_TRANSPARENT);
+        hour = ( ( ( clockTime.hour % 12 ) * 60 ) + clockTime.min );
+        hour = hour / (12 * 60.0);
+        hour = hour * Math.PI * 2;
+        drawHand(dc, hour, 60, 5);
+        
+        hour = ( ( ( clockTime.hour+6 % 12 ) * 60 ) + clockTime.min );
+        hour = hour / (12 * 60.0);
+        hour = hour * Math.PI * 2;
+        drawHand(dc, hour, 15, 5);
+        
+        min = ( clockTime.min / 60.0) * Math.PI * 2;
+        drawHand(dc, min, 100, 5);
+        min = ( (clockTime.min + 30) / 60.0) * Math.PI * 2;
+        drawHand(dc, min, 15, 5);
+        
+        dc.setColor(Gfx.COLOR_DK_RED, Gfx.COLOR_BLACK);
+        dc.fillCircle(width/2, height/2, 7);
+        dc.setColor(Gfx.COLOR_BLACK,Gfx.COLOR_BLACK);
+        dc.drawCircle(width/2, height/2, 7);		
     }
 
     //! Called when this View is removed from the screen. Save the
@@ -62,4 +90,25 @@ class QuWatchView extends Ui.WatchFace {
     function onEnterSleep() {
     }
 
+	// Draw watch hand
+    function drawHand(dc, angle, length, width) {
+        var coords = [ [-(width/2),0], 
+        			   [-(width/2), -length], 
+        			   [width/2, -length], 
+        			   [width/2, 0] 
+        			 ];
+        var result = new [4];
+        var centerX = dc.getWidth() / 2;
+        var centerY = dc.getHeight() / 2;
+        var cos = Math.cos(angle);
+        var sin = Math.sin(angle);
+
+        for (var i = 0; i < 4; i += 1) {
+            var x = (coords[i][0] * cos) - (coords[i][1] * sin);
+            var y = (coords[i][0] * sin) + (coords[i][1] * cos);
+            result[i] = [centerX + x, centerY + y];
+        }
+		
+        dc.fillPolygon(result);
+    }
 }
